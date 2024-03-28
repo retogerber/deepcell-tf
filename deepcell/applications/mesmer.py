@@ -136,15 +136,21 @@ def mesmer_postprocess(model_output, compartment='whole-cell',
     if compartment == 'whole-cell':
         label_images = deep_watershed(model_output['whole-cell'],
                                       **whole_cell_kwargs)
+        out = np.concatenate([np.array(model_output['whole-cell'][0]),np.array(model_output['whole-cell'][1])],axis=-1)
     elif compartment == 'nuclear':
         label_images = deep_watershed(model_output['nuclear'],
                                       **nuclear_kwargs)
+        out = np.concatenate([np.array(model_output['nuclear'][0]),np.array(model_output['nuclear'][1])],axis=-1)
     elif compartment == 'both':
         label_images_cell = deep_watershed(model_output['whole-cell'],
                                            **whole_cell_kwargs)
 
         label_images_nucleus = deep_watershed(model_output['nuclear'],
                                               **nuclear_kwargs)
+
+        out1 = np.concatenate([np.array(model_output['nuclear'][0]),np.array(model_output['nuclear'][1])],axis=-1)
+        out2 = np.concatenate([np.array(model_output['whole-cell'][0]),np.array(model_output['whole-cell'][1])],axis=-1)
+        out = np.concatenate([out1,out2],axis=-1)
 
         label_images = np.concatenate([
             label_images_cell,
@@ -155,7 +161,11 @@ def mesmer_postprocess(model_output, compartment='whole-cell',
         raise ValueError(f'Invalid compartment supplied: {compartment}. '
                          f'Must be one of {valid_compartments}')
 
-    return label_images
+    if whole_cell_kwargs['return_all'] or nuclear_kwargs['return_all']:
+        out = np.concatenate([out,label_images],axis=-1)
+        return out
+    else:
+        return label_images
 
 
 class Mesmer(Application):
@@ -277,7 +287,8 @@ class Mesmer(Application):
             'interior_smooth': 2,
             'small_objects_threshold': 15,
             'fill_holes_threshold': 15,
-            'radius': 2
+            'radius': 2,
+            'return_all': False
         }
 
         default_kwargs_nuc = {
@@ -287,7 +298,8 @@ class Mesmer(Application):
             'interior_smooth': 2,
             'small_objects_threshold': 15,
             'fill_holes_threshold': 15,
-            'radius': 2
+            'radius': 2,
+            'return_all': False
         }
 
         # overwrite defaults with any user-provided values

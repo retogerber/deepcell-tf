@@ -442,8 +442,12 @@ class Application:
             pad_mode=pad_mode, preprocess_kwargs=preprocess_kwargs
         )
 
+        self.logger.debug("output_images keys: %s", output_images.keys())
+
         # Postprocess predictions to create label image
         label_image = self._postprocess(output_images, **postprocess_kwargs)
+
+        self.logger.debug("label_image shape: %s", label_image.shape)
 
         # Resize label_image back to original resolution if necessary
         label_image = self._resize_output(label_image, image.shape)
